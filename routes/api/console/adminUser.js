@@ -85,7 +85,45 @@ const router = {
                 }
             })
         }
-    ]
+    ],
+    // 修改密码
+    '/updateUserPass': [
+        [
+            check('password').not().isEmpty().withMessage(keyMap.adminUser.password + keyMap.publicStr.notEmpty).trim(),
+            check('newPassword').not().isEmpty().withMessage(keyMap.adminUser.newPassword + keyMap.publicStr.notEmpty).trim(),
+        ],
+        (req, res) => {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.json({code: 1, msg: errors.mapped(), data: {}})
+            }
+            const resData = matchedData(req);
+            let {userId = ''} = req.session.user;
+            mySql.query(sql.queryUser,
+                ['password', {userId}],
+                {type: keyMap.logType.userSelect, req, userId}
+            ).then(row => {
+                if (row.length) {
+                    if (row[0].password === util.eStr(resData.password)) {
+                        mySql.update(sql.updateUserById,
+                            [{password: util.eStr(resData.newPassword)}, userId],
+                            {type: keyMap.logType.userCheckPassWord, req, userId}
+                        ).then(row => {
+                            if (row.affectedRows) {
+                                res.json({code: 0, msg: '密码修改成功', data: {}});
+                            } else {
+                                res.json({code: 1, msg: '密码修改失败', data: {}});
+                            }
+                        });
+                    } else {
+                        res.json({code: 1, msg: '原密码错误', data: {}})
+                    }
+                } else {
+                    res.json({code: 1, msg: '帐号不存在', data: {}})
+                }
+            })
+        }
+    ],
 };
 
 module.exports = router;

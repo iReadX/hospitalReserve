@@ -1,7 +1,8 @@
 const adminUser = {
     name: '昵称',
     userName: '帐号',
-    password: '密码'
+    password: '密码',
+    newPassword: '新密码',
 };
 
 const publicStr = {
