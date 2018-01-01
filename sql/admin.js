@@ -1,7 +1,7 @@
 let tableName = 'admin'; // 表名
 let admin = {
     // 查询所有
-    queryAll: `SELECT ? from ${tableName} limit ? offset ?`,
+    queryAll: `SELECT ?? from ${tableName} ORDER BY userId DESC limit ? offset ?`,
     // 添加管理员
     addUser: `INSERT INTO ${tableName}(name,userName,password,access,addTime,addIp) VALUES(?, ?, ?, ?, ?, ?)`,
     // 根据登录帐号查询管理员
