@@ -9,19 +9,25 @@ let keyMap = require('../../../util/keyMap');
 
 const router = {
     // 获取登录用户的信息
-    '/getUserInfo': (req, res) => {
-        let {userId = ''} = req.session.user;
-        mySql.query(sql.queryUser,
-            [['name', 'avator', 'userId', 'userName', 'access', 'lastTime', 'lastIp'], {userId}],
-            {type: keyMap.logType.userSelect, req, userId}
-        ).then(rows => {
-            if (rows.length) {
-                res.json({code: 0, msg: '帐号信息获取成功', data: rows[0]})
-            } else {
-                res.json({code: 1, msg: '帐号不存在', data: {}})
-            }
-        });
-    },
+    '/getUserInfo': [
+        [
+            check('userId').trim()
+        ],
+        (req, res) => {
+            const resData = matchedData(req);
+            let {userId = ''} = req.session.user;
+            mySql.query(sql.queryUser,
+                [['name', 'avator', 'userId', 'userName', 'access', 'lastTime', 'lastIp'], {userId: resData.userId || userId}],
+                {type: keyMap.logType.userSelect, req, userId}
+            ).then(rows => {
+                if (rows.length) {
+                    res.json({code: 0, msg: '帐号信息获取成功', data: rows[0]})
+                } else {
+                    res.json({code: 10, msg: '帐号不存在', data: {}})
+                }
+            });
+        }
+    ],
     // 密码验证
     '/checkPass': [
         [
@@ -45,7 +51,7 @@ const router = {
                         res.json({code: 1, msg: '密码错误', data: {}})
                     }
                 } else {
-                    res.json({code: 1, msg: '帐号不存在', data: {}})
+                    res.json({code: 10, msg: '帐号不存在', data: {}})
                 }
             })
         }
@@ -119,11 +125,59 @@ const router = {
                         res.json({code: 1, msg: '原密码错误', data: {}})
                     }
                 } else {
-                    res.json({code: 1, msg: '帐号不存在', data: {}})
+                    res.json({code: 10, msg: '帐号不存在', data: {}})
                 }
             })
         }
     ],
+    // 超级管理员更新帐号信息
+    '/updateUserInfoByAdmin': [
+        [
+            check('userId').trim(),
+            check('name').not().isEmpty().withMessage(keyMap.adminUser['name'] + keyMap.publicStr.notEmpty).trim(),
+            check('userName').not().isEmpty().withMessage(keyMap.adminUser['userName'] + keyMap.publicStr.notEmpty).trim(),
+            check('password').trim(),
+        ],
+        (req, res, next) => {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(422).json({code: 1, msg: '', errors: errors.mapped()})
+            }
+            const resData = matchedData(req);
+            let {userId = '', access = ''} = req.session.user;
+            if (!resData.userId) {
+                return res.json({code: 1, msg: '参数错误', data: {}})
+            }
+            if (access || !userId) {
+                return res.json({code: 1, msg: '暂无权限', data: {}})
+            }
+            let updateData = {name: resData.name, userName: resData.userName};
+            if (resData.password) {
+                updateData.password = util.eStr(resData.password)
+            }
+            // 更新
+            mySql.update(sql.updateUserById,
+                [updateData, resData.userId],
+                {type: keyMap.logType.userUpdateInfo, req, userId}
+            ).then(rows => {
+                if (rows.affectedRows) {
+                    res.json({code: 0, msg: '保存成功', data: {}});
+                } else {
+                    res.json({code: 1, msg: '保存失败', data: {}});
+                }
+            })
+        }
+    ],
+    // 获取所有人员
+    '/allUser': (req, res) => {
+        let {userId = ''} = req.session.user;
+        mySql.query(sql.queryAll,
+            [['name', 'userId', 'userName', 'lastTime', 'lastIp'], 100, 0],
+            {type: keyMap.logType.userSelect, req, userId}
+        ).then(rows => {
+            res.json({code: 0, msg: '', data: rows})
+        });
+    }
 };
 
 module.exports = router;
