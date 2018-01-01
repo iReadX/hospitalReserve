@@ -29,7 +29,7 @@ const router = {
                         res.json({code: 1, msg: '密码错误', data: {}})
                     } else {
                         let {name, avator, userId, userName, access, lastTime, lastIp} = rows[0];
-                        req.session.user = {userId};
+                        req.session.user = {userId, access};
                         res.json({
                             code: 0,
                             msg: '登录成功',
@@ -96,7 +96,10 @@ const router = {
     ],
     // 退出登录
     '/logout': (req, res) => {
-        req.session.destroy(() => res.json({code: 1, msg: '退出成功', data: {}}))
+        if (req.session) {
+            req.session.destroy()
+        }
+        res.json({code: 1, msg: '退出成功', data: {}});
     }
 };
 
