@@ -23,12 +23,12 @@ app.use(session({
         host: '127.0.0.1',
         port: 6379,
         pass: 'test123',
-        ttl: 24 * 60 * 60 * 1000 // Session的有效期为24小时
+        // ttl: 1 * 60 * 60 * 1000 // Session的有效期为1小时
     }),
     resave: true, // 是指每次请求都重新设置session cookie，假设cookie是10分钟过期，每次请求都会再设置10分钟
     saveUninitialized: false, // 指无论有没有session cookie，每次请求都设置个session cookie ，默认给个标示为 connect.sid
     secret: 'hospital', // 签名字符串
-    cookie: {maxAge: 24 * 60 * 60 * 1000} // 24小时
+    cookie: {maxAge: 2 * 60 * 60 * 1000} // 24小时
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
