@@ -1,9 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-var util = require('../../../util');
-
 var adminUser = require('./adminUser');
+var numbers = require('./number');
 
 // 该路由使用的中间件
 router.use((req, res, next) => {
@@ -13,8 +12,13 @@ router.use((req, res, next) => {
     next()
 });
 
-for (let url in adminUser) {
-    router.post(url, adminUser[url])
-}
+let all = [adminUser, numbers];
+let mod = ['', '/numbers'];
+
+all.map((item, index) => {
+    for (let url in item) {
+        router.post(mod[index] + url, item[url])
+    }
+});
 
 module.exports = router;
