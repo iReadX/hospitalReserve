@@ -137,7 +137,7 @@ const router = {
             const {userId = ''} = req.session.user;
 
             mySql.delete(sql.del,
-                id,
+                {id},
                 {type: keyMap.logType.delete, req, userId}
             ).then(rows => {
                 if (rows.affectedRows) {
